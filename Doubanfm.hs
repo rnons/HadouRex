@@ -1,8 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Doubanfm
-( play
+module Doubanfm where
+{-( play
 , getPlaylist
-) where
+, Config
+) where-}
 
 import Network.HTTP
 import Text.JSON
@@ -10,6 +11,17 @@ import Text.JSON.Generic
 import System.Cmd
 import GHC.IO.Exception
 import Codec.Binary.UTF8.String
+import Control.Monad.IO.Class (liftIO)
+import Data.Default
+import Data.Global.Config
+
+data Config = Config { cid :: Int } deriving (Show, Typeable)
+
+instance Default Config where
+    def = Config 0 
+
+instance GlobalConfig Config where
+    onSetConfig = liftIO . print
 
 -- there are two types of json response: song & ad.
 -- the 'company', 'rating_avg', 'public_time', 'ssid' fields are missing in ad_json
@@ -38,10 +50,12 @@ data Playlist = Playlist {
 } deriving (Eq, Show, Data, Typeable)
 
 getPlaylist = do
-    let cid = 6
-    let url = "http://douban.fm/j/mine/playlist?channel=" ++ show cid ++ "&type=n"
+    conf <- getConfig
+    let channel_id = cid conf
+    let url = "http://douban.fm/j/mine/playlist?channel=" ++ show channel_id ++ "&type=n"
     rsp <- simpleHTTP $ getRequest url
     json <- getResponseBody rsp
+    -- Chinese characters needed to be decoded by decodeString
     let playlist = decodeJSON $ decodeString json :: Playlist
     play $ song playlist
 
