@@ -1,9 +1,10 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Doubanfm where
-{-( play
+module Doubanfm
+( play
 , getPlaylist
-, Config
-) where-}
+, selectChannel
+, Config(Config)
+) where
 
 import Network.HTTP
 import Text.JSON
@@ -14,11 +15,12 @@ import Codec.Binary.UTF8.String
 import Control.Monad.IO.Class (liftIO)
 import Data.Default
 import Data.Global.Config
+import Control.Exception
 
-data Config = Config { cid :: Int } deriving (Show, Typeable)
+data Config = Config { cid :: String } deriving (Show, Typeable)
 
 instance Default Config where
-    def = Config 0 
+    def = Config "0"
 
 instance GlobalConfig Config where
     onSetConfig = liftIO . print
@@ -52,12 +54,14 @@ data Playlist = Playlist {
 getPlaylist = do
     conf <- getConfig
     let channel_id = cid conf
-    let url = "http://douban.fm/j/mine/playlist?channel=" ++ show channel_id ++ "&type=n"
+    let url = "http://douban.fm/j/mine/playlist?channel=" ++ channel_id ++ "&type=n"
+    putStrLn url
     rsp <- simpleHTTP $ getRequest url
     json <- getResponseBody rsp
     -- Chinese characters needed to be decoded by decodeString
     let playlist = decodeJSON $ decodeString json :: Playlist
-    play $ song playlist
+    -- * TO-FIX: not elegant * --
+    handle ((\_ -> onError)::SomeException -> IO ExitCode) (play $ song playlist)
 
 play :: [Song] -> IO GHC.IO.Exception.ExitCode
 play [] = getPlaylist
@@ -65,3 +69,16 @@ play (x:xs) = do
     putStrLn $ artist x ++ " - " ++ title x
     rawSystem "mpg123" ["-C", url x]
     play xs
+
+onError = do
+    putStrLn "!!! Wrong channel_id !!!"
+    selectChannel
+
+selectChannel = do
+    putStrLn "Please enter the channel_id you want to listen to:"
+    inpStr <- getLine
+    -- default channel: "1001294 PostRock Odyssey"
+    let cid = if inpStr `elem` ["","-3"] then "1001294" else inpStr
+    setConfig $ Config cid
+    getPlaylist
+
