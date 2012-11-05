@@ -1,0 +1,10 @@
+Usage: dourex channel_id
+   or: dourex COMMAND
+
+Commands:
+  listen        listen to channel_id without login
+  login         Interactive login (to be added)
+  search        Search matching DJ channels (to be added)
+  help          Help messages
+  
+  

@@ -1,10 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module Doubanfm
-( play
-, getPlaylist
-, selectChannel
-, Config(Config)
-) where
+module Douban.FM  where
 
 import Network.HTTP
 import Text.JSON
@@ -74,11 +69,23 @@ onError = do
     putStrLn "!!! Wrong channel_id !!!"
     selectChannel
 
+select = do
+    putStrLn "Inexhaustive channel lists:"
+    chs <- readFile "channels"
+    putStrLn chs
+    selectChannel
+
+listen [] = select
+listen (cid:xs) = do
+    putStrLn cid
+    setConfig $ Config cid
+    getPlaylist
+
 selectChannel = do
     putStrLn "Please enter the channel_id you want to listen to:"
     inpStr <- getLine
     -- default channel: "1001294 PostRock Odyssey"
-    let cid = if inpStr `elem` ["","-3"] then "1001294" else inpStr
-    setConfig $ Config cid
+    let channel_id = if inpStr `elem` ["","-3"] then "1001294" else inpStr
+    setConfig $ Config channel_id
     getPlaylist
 
