@@ -4,7 +4,7 @@ Usage: dourex channel_id
 Commands:
   listen        listen to channel_id without login
   login         Interactive login (to be added)
-  search        Search matching DJ channels (to be added)
+  search        Search matching DJ channels
   help          Help messages
   
   

@@ -6,13 +6,28 @@
 runhaskell dourex.hs
 </pre>
 
-When playing, press `h` to see a full list of available controls.
+You may want to compile it.
+
+<pre>
+ghc --make dourex.hs
+</pre>
+
+## Commands
+
+<pre>
+./dourex
+./dourex listen cid
+./dourex search keywords
+</pre>
+
+When playing, press `h` to see a full list of available controls (of mpg123).
 
 ## Dependencies
 
-[hackage: HTTP](http://hackage.haskell.org/package/HTTP-4000.2.6)
-[hackage: json](http://hackage.haskell.org/package/json-0.7)
-[mpg123](http://www.mpg123.de/)
+[hackage: HTTP](http://hackage.haskell.org/package/HTTP-4000.2.6)  
+[hackage: json](http://hackage.haskell.org/package/json-0.7)  
+[hackage: global-config](http://hackage.haskell.org/package/global-config-0.3.1)  
+[mpg123](http://www.mpg123.de/)  
 
 ## Documentation
 
