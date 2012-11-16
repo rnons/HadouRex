@@ -11,21 +11,16 @@ main = do
         (command:argList) <- getArgs
         dispatch command argList
         else select
-    -- dispatch command
 
 dispatch :: String -> [String] -> IO GHC.IO.Exception.ExitCode
---dispatch :: [String] -> IO GHC.IO.Exception.ExitCode
 dispatch "search" = search
+dispatch "hot" = hot
+dispatch "trending" = trending
 --dispatch "login" = login
 --dispatch "" = select
 --dispatch ("listen":[]) = select
 dispatch "listen" = listen
 dispatch x = help
-
-
-
---listen cid:[] = do
-
 
 help arg = do
     msg <- readFile "commands"

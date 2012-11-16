@@ -5,6 +5,8 @@ Commands:
   listen        listen to channel_id without login
   login         Interactive login (to be added)
   search        Search matching DJ channels
+  hot           Show hot channels
+  trending      Show up trending channels
   help          Help messages
   
   

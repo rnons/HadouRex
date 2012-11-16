@@ -39,6 +39,8 @@ search [] = do
 search (key:xs) = do
     -- encodeString: encode chinese characters
     let url = "http://douban.fm/j/explore/search?query=" ++ urlEncode (encodeString key)
+    search_helper url
+    {-
     rsp <- simpleHTTP $ getRequest $ url
     json <- getResponseBody rsp
     let chs = parseChannel json
@@ -51,6 +53,31 @@ search (key:xs) = do
         putStrLn ""
         )
     return GHC.IO.Exception.ExitSuccess
+    -}
+
+search_helper url = do
+    rsp <- simpleHTTP $ getRequest $ url
+    json <- getResponseBody rsp
+    let chs = parseChannel json
+    forM chs (\c -> do
+        putStrLn $ "* " ++ name c
+        putStrLn $ "    Channel_id: " ++ show (id c)
+        putStrLn $ "    Intro: " ++ intro c
+        putStr $ "    Hot songs: " 
+        forM (hot_songs c) (\s -> putStr $ s ++ ", ")
+        putStrLn ""
+        )
+    return GHC.IO.Exception.ExitSuccess
+
+--hot [keywords] = do
+--hot (x:xs) = do
+hot _ = do
+    let url = "http://douban.fm/j/explore/hot_channels"
+    search_helper url
+
+trending _ = do
+    let url = "http://douban.fm/j/explore/up_trending_channels"
+    search_helper url
 
 parseChannel json = do
     let decoded = decode json :: Result (JSObject JSValue)
