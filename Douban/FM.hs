@@ -11,6 +11,7 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Default
 import Data.Global.Config
 import Control.Exception
+import System.Console.ANSI
 
 data Config = Config { cid :: String } deriving (Show, Typeable)
 
@@ -61,7 +62,12 @@ getPlaylist = do
 play :: [Song] -> IO GHC.IO.Exception.ExitCode
 play [] = getPlaylist
 play (x:xs) = do
-    putStrLn $ artist x ++ " - " ++ title x
+    setSGR [SetConsoleIntensity BoldIntensity,
+            SetColor Foreground Vivid Green]
+    putStrLn ""
+    putStr $ artist x ++ " - " ++ title x
+    setSGR [Reset]
+    putStrLn ""
     rawSystem "mpg123" ["-C", url x]
     play xs
 

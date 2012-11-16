@@ -8,6 +8,7 @@ import Text.JSON.Generic
 import GHC.IO.Exception
 import Codec.Binary.UTF8.String hiding (decode, encode)
 import Control.Monad
+import System.Console.ANSI
 
 data Creator = Creator {
     url :: String,
@@ -40,37 +41,7 @@ search (key:xs) = do
     -- encodeString: encode chinese characters
     let url = "http://douban.fm/j/explore/search?query=" ++ urlEncode (encodeString key)
     search_helper url
-    {-
-    rsp <- simpleHTTP $ getRequest $ url
-    json <- getResponseBody rsp
-    let chs = parseChannel json
-    forM chs (\c -> do
-        putStrLn $ "* " ++ name c
-        putStrLn $ "    Channel_id: " ++ show (id c)
-        putStrLn $ "    Intro: " ++ intro c
-        putStr $ "    Hot songs: " 
-        forM (hot_songs c) (\s -> putStr $ s ++ ", ")
-        putStrLn ""
-        )
-    return GHC.IO.Exception.ExitSuccess
-    -}
 
-search_helper url = do
-    rsp <- simpleHTTP $ getRequest $ url
-    json <- getResponseBody rsp
-    let chs = parseChannel json
-    forM chs (\c -> do
-        putStrLn $ "* " ++ name c
-        putStrLn $ "    Channel_id: " ++ show (id c)
-        putStrLn $ "    Intro: " ++ intro c
-        putStr $ "    Hot songs: " 
-        forM (hot_songs c) (\s -> putStr $ s ++ ", ")
-        putStrLn ""
-        )
-    return GHC.IO.Exception.ExitSuccess
-
---hot [keywords] = do
---hot (x:xs) = do
 hot _ = do
     let url = "http://douban.fm/j/explore/hot_channels"
     search_helper url
@@ -78,6 +49,26 @@ hot _ = do
 trending _ = do
     let url = "http://douban.fm/j/explore/up_trending_channels"
     search_helper url
+
+search_helper url = do
+    rsp <- simpleHTTP $ getRequest $ url
+    json <- getResponseBody rsp
+    let chs = parseChannel json
+    forM chs (\c -> do
+        setSGR [SetConsoleIntensity BoldIntensity]
+        putStr $ "* " ++ name c 
+        setSGR [SetColor Foreground Vivid Green]
+        putStrLn $ " cid=" ++ show (id c)
+        setSGR [Reset]
+        --putStrLn $ "    Intro: " ++ folding (intro c) 
+        --    where folding = foldr (\x acc -> if x `elem` ['\r', '\n'] then ' ':acc else x:acc) []
+        let folding = foldr (\x acc -> if x `elem` ['\r', '\n'] then ' ':acc else x:acc) []
+        putStrLn $ "\x1b[0m" ++ "    Intro: " ++ folding (intro c) 
+        putStr $ "    Hot songs: " 
+        forM (hot_songs c) (\s -> putStr $ s ++ ", ")
+        putStrLn ""
+        )
+    return GHC.IO.Exception.ExitSuccess
 
 parseChannel json = do
     let decoded = decode json :: Result (JSObject JSValue)
