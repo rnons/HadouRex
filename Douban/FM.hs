@@ -5,13 +5,17 @@ import Network.HTTP
 import Text.JSON
 import Text.JSON.Generic
 import System.Cmd
+import System.IO
 import GHC.IO.Exception
 import Codec.Binary.UTF8.String
 import Control.Monad.IO.Class (liftIO)
 import Data.Default
 import Data.Global.Config
+import Control.Concurrent
 import Control.Exception
 import System.Console.ANSI
+import Douban.Player
+import System.Exit
 
 data Config = Config { cid :: String } deriving (Show, Typeable)
 
@@ -57,9 +61,11 @@ getPlaylist = do
     -- Chinese characters needed to be decoded by decodeString
     let playlist = decodeJSON $ decodeString json :: Playlist
     -- * TO-FIX: not elegant * --
-    handle ((\_ -> onError)::SomeException -> IO ExitCode) (play $ song playlist)
+    --handle ((\_ -> onError)::SomeException -> IO ExitCode) (play $ song playlist)
+    handle ((\_ -> onError)::SomeException -> IO ()) (play $ song playlist)
 
-play :: [Song] -> IO GHC.IO.Exception.ExitCode
+--play :: [Song] -> IO GHC.IO.Exception.ExitCode
+play :: [Song] -> IO ()
 play [] = getPlaylist
 play (x:xs) = do
     setSGR [SetConsoleIntensity BoldIntensity,
@@ -68,8 +74,27 @@ play (x:xs) = do
     putStr $ artist x ++ " - " ++ title x
     setSGR [Reset]
     putStrLn ""
-    rawSystem "mpg123" ["-C", url x]
+    hin <- readMVar mhin
+    hout <- readMVar mhout
+    print hin
+    print $ "LOAD " ++ url x
+    hPutStrLn hin $ "LOAD " ++ url x
+    hFlush hin
+    liftIO $ do
+        mpg123wait hin hout
+               
+    --let mpg123wait = do
+    
+    --rawSystem "mpg123" ["-C", url x]
+    --threadDelay 20000000
+    --return ()
     play xs
+    where 
+        mpg123wait hin hout = do
+            line <- hGetLine hout
+            case line of
+                 "@P 0" -> return ExitSuccess
+                 _ -> mpg123wait hin hout
 
 onError = do
     putStrLn "!!! Wrong channel_id !!!"

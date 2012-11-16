@@ -36,7 +36,7 @@ data Channel_list = Channel_list {
 
 search [] = do
     putStrLn "Please supply your keywords"
-    return GHC.IO.Exception.ExitSuccess
+    return ()
 search (key:xs) = do
     -- encodeString: encode chinese characters
     let url = "http://douban.fm/j/explore/search?query=" ++ urlEncode (encodeString key)
@@ -68,7 +68,7 @@ search_helper url = do
         forM (hot_songs c) (\s -> putStr $ s ++ ", ")
         putStrLn ""
         )
-    return GHC.IO.Exception.ExitSuccess
+    return ()
 
 parseChannel json = do
     let decoded = decode json :: Result (JSObject JSValue)
