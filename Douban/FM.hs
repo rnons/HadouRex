@@ -76,8 +76,6 @@ play (x:xs) = do
     putStrLn ""
     hin <- readMVar mhin
     hout <- readMVar mhout
-    print hin
-    print $ "LOAD " ++ url x
     hPutStrLn hin $ "LOAD " ++ url x
     hFlush hin
     liftIO $ do

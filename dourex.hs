@@ -11,7 +11,6 @@ main = do
     --dispatch command argList
     forkIO mpgLoop
     forkIO mpgInput
-    --mpgInput >>= forkIO
     hSetEcho stdin False
     hSetBuffering stdin NoBuffering
     hSetBuffering stdout NoBuffering
@@ -24,7 +23,6 @@ mpgInput = do
         dispatch command argList
         else select
 
---dispatch :: String -> [String] -> IO GHC.IO.Exception.ExitCode
 dispatch :: String -> [String] -> IO ()
 dispatch "search" = search
 dispatch "hot" = hot
@@ -39,5 +37,4 @@ help arg = do
     msg <- readFile "commands"
     putStrLn msg
     --TODO: hide "ExitSuccess" msg on the last line
-    --return GHC.IO.Exception.ExitSuccess
     return ()

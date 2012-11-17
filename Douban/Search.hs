@@ -9,6 +9,7 @@ import GHC.IO.Exception
 import Codec.Binary.UTF8.String hiding (decode, encode)
 import Control.Monad
 import System.Console.ANSI
+import Douban.Util
 
 data Creator = Creator {
     url :: String,
@@ -68,7 +69,8 @@ search_helper url = do
         forM (hot_songs c) (\s -> putStr $ s ++ ", ")
         putStrLn ""
         )
-    return ()
+    shutdown
+    --return ()
 
 parseChannel json = do
     let decoded = decode json :: Result (JSObject JSValue)
