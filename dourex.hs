@@ -10,7 +10,8 @@ main = do
     --(command:argList) <- getArgs
     --dispatch command argList
     forkIO mpgLoop
-    forkIO mpgInput
+    mpgInput
+    --forkIO mpgInput
     hSetEcho stdin False
     hSetBuffering stdin NoBuffering
     hSetBuffering stdout NoBuffering
@@ -27,7 +28,7 @@ dispatch :: String -> [String] -> IO ()
 dispatch "search" = search
 dispatch "hot" = hot
 dispatch "trending" = trending
---dispatch "login" = login
+dispatch "login" = login
 --dispatch "" = select
 --dispatch ("listen":[]) = select
 dispatch "listen" = listen

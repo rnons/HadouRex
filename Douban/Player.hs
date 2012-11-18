@@ -6,17 +6,21 @@ import System.IO.Unsafe
 import System.Process
 import Control.Concurrent
 import Douban.Util
+import Douban.State
+import Network.HTTP
+import Codec.Binary.UTF8.String (encodeString)
 
-mhin = unsafePerformIO $ newEmptyMVar
-mhout = unsafePerformIO $ newEmptyMVar
 mstatus = unsafePerformIO $ newMVar True
 
 mpgLoop = do
     let sh = "mpg123 -R"
     (Just hin, Just hout, _, hdl) <- createProcess (shell sh){ std_in = CreatePipe, std_out=CreatePipe }
     hPutStrLn hin "SILENCE"
-    putMVar mhin hin
-    putMVar mhout hout
+    --putMVar mhin hin
+    --putMVar mhout hout
+    mhin <- newMVar hin
+    mhout <- newMVar hout
+    silentlyModifyST $ \st -> st { writeh = mhin, readh = mhout }
     waitForProcess hdl
     hPutStrLn hin "STOP"
     hGetContents hout
@@ -34,6 +38,8 @@ handleKey 'p' = do
     pause
 handleKey 'n' = do
     send "STOP"
+handleKey 'r' = do
+    recommend
 handleKey 'q' = do
     send "STOP"
     shutdown
@@ -42,6 +48,7 @@ handleKey 'h' = do
             " -= terminal control keys =-",
             "[p] or [ ] play/pause",
             "[n]    next track",
+            "[r]    recommend to douban",
             "[h]    this help",
             "[q]    quit"
           ]
@@ -57,9 +64,12 @@ handleKey 'h' = do
 handleKey _ = getKey
 
 send msg = do
-    hin <- readMVar mhin
-    hPutStrLn hin msg
-    hFlush hin
+    --hin <- readMVar mhin
+    --hin <- readMVar (getsST chin)
+    withST $ \st -> do
+        hin <- readMVar (writeh st)
+        hPutStrLn hin msg
+        hFlush hin
 
 pause = do
     send "PAUSE"
@@ -78,3 +88,32 @@ pause = do
          "@P 1" -> putStrLn "Playing"
          "@P 2" -> putStrLn "Paused"
     -}
+
+recommend = do
+    putStrLn "Recommend to douban"
+    cid     <- getsST ccid
+    name    <- getsST ctitle
+    --href    <- getsST calbum
+    image   <- getsST cpicture
+    csid    <- getsST csid
+    cssid   <- getsST cssid
+    let start = csid ++ "g" ++ cssid ++ "g0"
+    let sdata = [("start", start),("cid", cid)]
+    let href = "http://douban.fm/?" ++ urlEncodeVars sdata
+    let fdata = [("name", encodeString name),
+                 ("href", href),
+                 ("image", image),
+                 ("text", "Testing HadouRex, never mind.."),
+                 ("desc", "(from HadouRex with <3)"),
+                 --("apikey", "0d29425036aedcc4277bc6f0a40c964c"),
+                 ("target_type", "rec"),
+                 ("target_action", "0"),
+                 ("object_kind", "3043"),
+                 ("object_id", csid)
+                ]
+    let shuo = "http://shuo.douban.com/!service/share?" ++ urlEncodeVars fdata
+    forkIO $ do
+        createProcess (proc "xdg-open" [shuo]){ std_in = CreatePipe, std_out=CreatePipe, std_err = CreatePipe }
+        --rawSystem "xdg-open" [shuo]
+        return ()
+    return ()
