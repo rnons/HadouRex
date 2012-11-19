@@ -28,6 +28,9 @@ dispatch :: String -> [String] -> IO ()
 dispatch "search" = search
 dispatch "hot" = hot
 dispatch "trending" = trending
+dispatch "mark" = mark
+dispatch "unmark" = unmark
+dispatch "marks" = marks
 dispatch "login" = login
 --dispatch "" = select
 --dispatch ("listen":[]) = select

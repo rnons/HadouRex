@@ -16,6 +16,7 @@ data HState = HState {
     bid         ::  String,
     ccid        ::  String,
     channel_name::  String,
+    st_ch_marked::  Bool,               -- is current channel favored or not
     cpicture    ::  String,
     calbumtitle ::  String,
     calbum      ::  String,
@@ -40,6 +41,7 @@ emptySt = HState {
     bid         =   "",
     ccid        =   "0",
     channel_name=   "",
+    st_ch_marked=   False,
     cpicture    =   "",
     calbumtitle =   "",
     calbum      =   "",

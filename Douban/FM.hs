@@ -13,12 +13,14 @@ import GHC.IO.Exception
 import Codec.Binary.UTF8.String (decodeString)
 import Control.Monad.IO.Class (liftIO)
 import Data.Default
+import Data.List
 import Control.Concurrent
 import Control.Exception
 import System.Console.ANSI
 import Douban.State
 import Douban.Search
 import System.Exit
+import Douban.Util
 
 -- there are two types of json response: song & ad.
 -- the 'company', 'rating_avg', 'public_time', 'ssid' fields are missing in ad_json
@@ -41,6 +43,13 @@ data Song = Song {
     aid :: String
 } deriving (Eq, Show, Data, Typeable)
 
+data FavChannel = FavChannel {
+     fav_id    ::  String
+    ,fav_name   ::  String
+} deriving (Eq, Show, Data, Typeable)
+    
+    
+
 -- filter out ads :-)
 parseSong json = do
     let decoded = decode json :: Result (JSObject JSValue)
@@ -53,12 +62,16 @@ parseSong json = do
              Ok _ -> True
              _  -> False
     let ss = filter filterSong songs
-    decodeJSON $ decodeString $  encode ss :: [Song]
+    decodeJSON $ decodeString $ encode ss :: [Song]
 
 getPlaylist t = do
-    channel_id <- getsST ccid
+    ch_id <- getsST ccid
+    ch_name <- getsST channel_name
+    let ch = FavChannel { fav_id = ch_id, fav_name = ch_name }
+    ch_marked <- isMarked ch
+    silentlyModifyST $ \st -> st { st_ch_marked = ch_marked }
     let rdata = [("type", t),
-                 ("channel", channel_id),
+                 ("channel", ch_id),
                  ("from", "HadouRex")
                 ]
     let url = "http://douban.fm/j/mine/playlist?" ++ urlEncodeVars rdata
@@ -210,4 +223,74 @@ withEcho :: Bool -> IO a -> IO a
 withEcho echo action = do
   old <- hGetEcho stdin
   bracket_ (hSetEcho stdin echo) (hSetEcho stdin old) action
+
+bookmarks = "bookmarks.json"
+
+mark ("current":xs) = do
+    ch_id <- getsST ccid
+    ch_name <- getsST channel_name
+    let ch = FavChannel { fav_id = ch_id, fav_name = ch_name }
+    markCore ch
+mark (ch_id:xs) = do
+    ch_name <- channelName ch_id
+    let ch = FavChannel { fav_id = ch_id, fav_name = ch_name }
+    markCore ch
+    shutdown
+
+markCore ch = do
+    json <- readFile bookmarks
+    case json of
+         "" -> do
+             let newjson = encodeJSON [ch]
+             writeFile bookmarks newjson
+             putStrLn "Marked"
+         _ -> do
+             let fav_ch = decodeJSON json :: [FavChannel]
+             --insert ch fav_ch
+             if ch `elem` fav_ch then putStrLn "Already marked!"
+                    else do
+                        let newjson = encodeJSON $ ch:fav_ch
+                        writeFile bookmarks newjson
+                        putStrLn "Marked"
+    silentlyModifyST $ \st -> st { st_ch_marked = True }
+
+unmark ("current":xs) = do
+    ch_id <- getsST ccid
+    ch_name <- getsST channel_name
+    let ch = FavChannel { fav_id = ch_id, fav_name = ch_name }
+    unmarkCore ch
+unmark (ch_id:xs) = do
+    ch_name <- channelName ch_id
+    let ch = FavChannel { fav_id = ch_id, fav_name = ch_name }
+    unmarkCore ch
+    shutdown
+
+unmarkCore ch = do
+    json <- readFile bookmarks
+    case json of
+         "" -> do
+             let newjson = encodeJSON ch
+             writeFile bookmarks newjson
+             putStrLn "Not marked!"
+         _ -> do
+             let fav_ch = decodeJSON json :: [FavChannel]
+             if ch `notElem` fav_ch then putStrLn "Not marked!"
+                    else do
+                        let newjson = encodeJSON $ delete ch fav_ch
+                        writeFile bookmarks newjson
+                        putStrLn "Unmarked"
+    silentlyModifyST $ \st -> st { st_ch_marked = False }
+
+marks _ = do
+    json <- readFile bookmarks
+    putStrLn json
+    shutdown
+
+isMarked ch = do
+    json <- readFile bookmarks
+    case json of
+         [] -> return False
+         _ -> do
+             let fav_ch = decodeJSON json :: [FavChannel]
+             return $ ch `elem` fav_ch
 

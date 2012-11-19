@@ -5,6 +5,7 @@ import System.IO
 import System.IO.Unsafe
 import System.Process
 import Control.Concurrent
+import Douban.FM
 import Douban.Util
 import Douban.State
 import Network.HTTP
@@ -38,6 +39,8 @@ handleKey 'p' = do
     pause
 handleKey 'n' = do
     send "STOP"
+handleKey 'm' = do
+    markCurrent
 handleKey 'r' = do
     recommend
 handleKey 'q' = do
@@ -48,6 +51,7 @@ handleKey 'h' = do
             " -= terminal control keys =-",
             "[p] or [ ] play/pause",
             "[n]    next track",
+            "[m]    mark/unmark current channel",
             "[r]    recommend to douban",
             "[h]    this help",
             "[q]    quit"
@@ -88,6 +92,10 @@ pause = do
          "@P 1" -> putStrLn "Playing"
          "@P 2" -> putStrLn "Paused"
     -}
+
+markCurrent = do
+    ch_marked <- getsST st_ch_marked
+    if ch_marked == True then unmark ["current"] else mark ["current"]
 
 recommend = do
     putStrLn "Recommend to douban"
