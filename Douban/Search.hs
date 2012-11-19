@@ -12,7 +12,7 @@ import System.Console.ANSI
 import Douban.Util
 
 data Creator = Creator {
-    url :: String,
+    curl :: String,
     -- !name conflicts!
     cname :: String
 } deriving (Eq, Show, Data, Typeable)

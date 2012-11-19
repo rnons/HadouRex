@@ -17,6 +17,7 @@ import Control.Concurrent
 import Control.Exception
 import System.Console.ANSI
 import Douban.State
+import Douban.Search
 import System.Exit
 
 -- there are two types of json response: song & ad.
@@ -38,11 +39,6 @@ data Song = Song {
     --length :: Int,
     sid :: String,
     aid :: String
-} deriving (Eq, Show, Data, Typeable)
-
-data Playlist = Playlist {
-    r :: Int,
-    song :: [Song] 
 } deriving (Eq, Show, Data, Typeable)
 
 -- filter out ads :-)
@@ -122,7 +118,8 @@ select = do
 
 listen [] = select
 listen (cid:xs) = do
-    putStrLn $ "Current channel id is: " ++ cid
+    putStr $ "Current channel is: "
+    channelName cid >>= putStrLn
     silentlyModifyST $ \st -> st { ccid = cid }
     forkIO $ getPlaylist "n"
     return ()
@@ -132,9 +129,55 @@ selectChannel = do
     inpStr <- getLine
     -- default channel: "1001294 PostRock Odyssey"
     let channel_id = if inpStr `elem` ["","-3"] then "1001294" else inpStr
+    listen [channel_id]
+    {-
     silentlyModifyST $ \st -> st { ccid = channel_id }
     forkIO $ getPlaylist "n"
     return ()
+    -}
+
+channelName cid = do
+    name <- appChannelName cid
+    case name of
+        Just aname -> return aname
+        Nothing -> do
+            sname <- searchChannelName cid
+            return sname
+
+appChannelName cid = do
+    let app_url = "http://www.douban.com/j/app/radio/channels"
+    rsp <- simpleHTTP $ getRequest app_url
+    json <- getResponseBody rsp
+    let decoded = decode json :: Result (JSObject JSValue)
+        value = decoded >>= (valFromObj "channels") :: Result [JSObject JSValue]
+        channels = (\(Ok x) -> x) value
+    --let okc = head $ filter (\c -> cidMatch cid c) channels
+    let okc = filter (\c -> cidMatch cid c) channels
+    case okc of
+         [] -> return Nothing
+         _ -> do
+             let okname = valFromObj "name" (head okc) :: Result JSValue
+             let jsname = (\(Ok x) -> x) okname
+                 aokname = readJSON jsname :: Result JSString
+                 name = decodeString $ fromJSString $ (\(Ok x) -> x) aokname
+             return $ Just name 
+    
+cidMatch cid channel = do
+    let ok_cid = valFromObj "channel_id" channel :: Result JSValue
+        channel_id = (\(Ok x ) -> x) ok_cid
+        okc = readJSON channel_id :: Result Int
+        c = (\(Ok x) -> x) okc
+    if show c == cid then True else False 
+
+searchChannelName cid = do
+    let rdata = [
+                 ("channel", cid)
+                ]
+    let url = "http://douban.fm/j/explore/search?query=" ++ urlEncodeVars rdata 
+    rsp <- simpleHTTP $ getRequest url
+    json <- getResponseBody rsp
+    let chs = parseChannel json
+    return $ name $ head chs
 
 login _ = do  
     putStr "Username: "
