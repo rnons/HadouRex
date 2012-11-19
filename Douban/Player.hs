@@ -92,6 +92,7 @@ pause = do
 recommend = do
     putStrLn "Recommend to douban"
     cid     <- getsST ccid
+    cname   <- getsST channel_name
     name    <- getsST ctitle
     --href    <- getsST calbum
     image   <- getsST cpicture
@@ -100,11 +101,12 @@ recommend = do
     let start = csid ++ "g" ++ cssid ++ "g0"
     let sdata = [("start", start),("cid", cid)]
     let href = "http://douban.fm/?" ++ urlEncodeVars sdata
+        desc = encodeString $ "(来自dourex-" ++ cname ++ " MHz)"
     let fdata = [("name", encodeString name),
                  ("href", href),
                  ("image", image),
                  ("text", "Testing HadouRex, never mind.."),
-                 ("desc", "(from HadouRex with <3)"),
+                 ("desc", desc),
                  --("apikey", "0d29425036aedcc4277bc6f0a40c964c"),
                  ("target_type", "rec"),
                  ("target_action", "0"),

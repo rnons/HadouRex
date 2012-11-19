@@ -119,8 +119,9 @@ select = do
 listen [] = select
 listen (cid:xs) = do
     putStr $ "Current channel is: "
-    channelName cid >>= putStrLn
-    silentlyModifyST $ \st -> st { ccid = cid }
+    cname <- channelName cid 
+    putStrLn cname
+    silentlyModifyST $ \st -> st { ccid = cid, channel_name = cname }
     forkIO $ getPlaylist "n"
     return ()
 
