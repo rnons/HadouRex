@@ -11,5 +11,3 @@ Commands:
   unmark [cid]      unbookmark channel
   marks             list bookmarked channel
   help              Help messages
-  
-  

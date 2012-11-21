@@ -8,24 +8,24 @@ import Control.Concurrent.MVar
 import Network.HTTP.Headers
 
 data HState = HState {
-    writeh      ::  MVar Handle,
-    readh       ::  MVar Handle,
-    status      ::  Bool,
-    headers     ::  MVar Header,
-    dbcl2       ::  String,
-    bid         ::  String,
-    ccid        ::  String,
-    channel_name::  String,
-    st_ch_marked::  Bool,               -- is current channel favored or not
-    cpicture    ::  String,
-    calbumtitle ::  String,
-    calbum      ::  String,
-    clike       ::  Int,
-    cartist     ::  String,
-    ctitle      ::  String,
-    csid        ::  String,
-    cssid       ::  String,
-    caid        ::  String
+    writeh          ::  MVar Handle,
+    readh           ::  MVar Handle,
+    status          ::  Bool,
+    headers         ::  MVar Header,
+    dbcl2           ::  String,
+    bid             ::  String,
+    st_ch_id        ::  String,
+    st_ch_name      ::  String,
+    st_ch_marked    ::  Bool,               -- is current channel favored or not
+    st_s_picture    ::  String,
+    st_s_albumtitle ::  String,
+    st_s_album      ::  String,
+    st_s_like       ::  Int,
+    st_s_artist     ::  String,
+    st_s_title      ::  String,
+    st_s_sid        ::  String,
+    st_s_ssid       ::  String,
+    st_s_aid        ::  String
 }
 
 --
@@ -33,24 +33,24 @@ data HState = HState {
 --
 emptySt :: HState
 emptySt = HState {
-    writeh      =   unsafePerformIO newEmptyMVar,
-    readh       =   unsafePerformIO newEmptyMVar,
-    status      =   True,
-    headers     =   unsafePerformIO newEmptyMVar,
-    dbcl2       =   "",
-    bid         =   "",
-    ccid        =   "0",
-    channel_name=   "",
-    st_ch_marked=   False,
-    cpicture    =   "",
-    calbumtitle =   "",
-    calbum      =   "",
-    clike       =   0,
-    cartist     =   "",
-    ctitle      =   "",
-    csid        =   "",
-    cssid        =   "",
-    caid        =   ""    
+    writeh          =   unsafePerformIO newEmptyMVar,
+    readh           =   unsafePerformIO newEmptyMVar,
+    status          =   True,
+    headers         =   unsafePerformIO newEmptyMVar,
+    dbcl2           =   "",
+    bid             =   "",
+    st_ch_id        =   "0",
+    st_ch_name      =   "",
+    st_ch_marked    =   False,
+    st_s_picture    =   "",
+    st_s_albumtitle =   "",
+    st_s_album      =   "",
+    st_s_like       =   0,
+    st_s_artist     =   "",
+    st_s_title      =   "",
+    st_s_sid        =   "",
+    st_s_ssid       =   "",
+    st_s_aid        =   ""    
 }
 
 --

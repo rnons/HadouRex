@@ -4,6 +4,7 @@ import GHC.IO.Exception
 import Douban.FM
 import Douban.Search
 import Douban.Player
+import Douban.Utils
 import System.IO
 
 main = do
@@ -35,10 +36,5 @@ dispatch "login" = login
 --dispatch "" = select
 --dispatch ("listen":[]) = select
 dispatch "listen" = listen
-dispatch x = help
+dispatch x = showHelp
 
-help arg = do
-    msg <- readFile "commands"
-    putStrLn msg
-    --TODO: hide "ExitSuccess" msg on the last line
-    return ()
