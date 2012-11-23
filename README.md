@@ -17,12 +17,17 @@ ghc --make dourex.hs -threaded
 ## Commands
 
 <pre>
-./dourex
-./dourex listen cid
-./dourex search keywords
-./dourex hot
-./dourex trending
+dourex
+dourex listen [cid/artist]
+dourex search keywords
+dourex hot
+dourex trending
+dourex mark cid
+dourex unmark cid
+dourex marks
 </pre>
+
+In `dourex listen arg`, if arg is all integer, dourex will assume it to be *channel id*. Otherwise, it will be assumed as *artist name*.
 
 When playing, press `h` to see a full list of available controls.
 

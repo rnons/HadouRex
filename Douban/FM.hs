@@ -6,13 +6,16 @@ import Network.URI
 import Network.HTTP
 import Network.Browser
 import Network.HTTP.Cookie
+import Text.HTML.TagSoup
 import Text.JSON
 import Text.JSON.Generic
 import System.Cmd
+import System.Exit
 import System.IO
 import GHC.IO.Exception
-import Codec.Binary.UTF8.String (decodeString)
+import Codec.Binary.UTF8.String (encodeString, decodeString)
 import Control.Monad.IO.Class (liftIO)
+import Data.Char
 import Data.Default
 import Data.List
 import Control.Monad
@@ -21,7 +24,6 @@ import Control.Exception
 import System.Console.ANSI
 import Douban.State
 import Douban.Search
-import System.Exit
 import Douban.Utils
 
 -- there are two types of json response: song & ad.
@@ -66,8 +68,10 @@ parseSong json = do
 
 getPlaylist t = do
     ch_id <- getsST st_ch_id
+    context <- getsST st_context
     let rdata = [("type", t),
                  ("channel", ch_id),
+                 ("context", context),
                  ("from", "HadouRex")
                 ]
     let url = "http://douban.fm/j/mine/playlist?" ++ urlEncodeVars rdata
@@ -121,7 +125,11 @@ select = do
     selectChannel
 
 listen [] = select
-listen (ch_id:xs) = do
+listen (x:xs)
+    | isChId x = listenCid x
+    | otherwise = listenArtist x
+
+listenCid ch_id = do
     putStr "您正在收听的是: "
     ch <- channelInfo ch_id 
     let ch_name = name ch 
@@ -132,6 +140,37 @@ listen (ch_id:xs) = do
                                    ,st_ch_picture = banner ch }
     forkIO $ getPlaylist "n"
     return ()
+
+listenArtist name = do
+    let url = "http://music.douban.com/tag/" ++ encodeString name
+    rsp <- simpleHTTP $ getRequest url
+    body <- getResponseBody rsp
+    let tags = parseTags body
+        sec = sections (~== "<td id=musician_info>") tags
+    case sec of
+         [] -> do
+             putStrLn $ "Sorry, douban.fm knows no musician named " ++ name
+             selectChannel
+         _  -> do
+             let tag_url = (head $ sec) !! 2
+                 tag_name = (head $ sec) !! 3
+                 musician = (\(TagOpen s x) -> x) tag_url
+                 musician_name = decodeString $ (\(TagText x) -> x) tag_name
+                 (_, href) = head musician
+                 musician_id = filter isDigit href
+             putStr "您正在收听的是: " 
+             putStrLn $ musician_name ++ " MHz"
+             silentlyModifyST $ \st -> st {  st_ch_id = "0"
+                                            ,st_ch_name = musician_name
+                                            ,st_ch_intro = musician_name
+                                            ,st_context = "channel:0|musician_id:" ++ musician_id
+                                          }
+             forkIO $ getPlaylist "n"
+             return ()
+
+isChId :: [Char] -> Bool
+isChId [] = True
+isChId (x:xs) = isDigit x && isChId xs
 
 selectChannel = do
     putStrLn "Please enter the channel_id you want to listen to:"
