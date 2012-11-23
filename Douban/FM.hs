@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Douban.FM  where
 
+import Prelude hiding (id)
 import Network.URI
 import Network.HTTP
 import Network.Browser
@@ -48,8 +49,6 @@ data FavChannel = FavChannel {
      fav_id    ::  String
     ,fav_name   ::  String
 } deriving (Eq, Show, Data, Typeable)
-    
-    
 
 -- filter out ads :-)
 parseSong json = do
@@ -118,18 +117,19 @@ onError = do
     selectChannel
 
 select = do
-    --putStrLn "Inexhaustive channel lists:"
-    --chs <- readFile "channels"
-    --putStrLn chs
     pprMarks
     selectChannel
 
 listen [] = select
-listen (cid:xs) = do
-    putStr "Current channel is: "
-    cname <- channelName cid 
-    putStrLn cname
-    silentlyModifyST $ \st -> st { st_ch_id = cid, st_ch_name = cname }
+listen (ch_id:xs) = do
+    putStr "您正在收听的是: "
+    ch <- channelInfo ch_id 
+    let ch_name = name ch 
+    putStrLn $ name ch ++ " MHz"
+    silentlyModifyST $ \st -> st {  st_ch_id = ch_id
+                                   ,st_ch_name = name ch
+                                   ,st_ch_intro = intro ch
+                                   ,st_ch_picture = banner ch }
     forkIO $ getPlaylist "n"
     return ()
 
@@ -140,46 +140,21 @@ selectChannel = do
     let channel_id = if inpStr `elem` ["","-3"] then "1001294" else inpStr
     listen [channel_id]
 
-channelName cid = do
-    name <- appChannelName cid
-    case name of
-        Just aname -> return aname
-        Nothing -> searchChannelName cid
-
-appChannelName cid = do
-    let app_url = "http://www.douban.com/j/app/radio/channels"
-    rsp <- simpleHTTP $ getRequest app_url
-    json <- getResponseBody rsp
-    let decoded = decode json :: Result (JSObject JSValue)
-        value = decoded >>= valFromObj "channels" :: Result [JSObject JSValue]
-        channels = (\(Ok x) -> x) value
-    --let okc = head $ filter (\c -> cidMatch cid c) channels
-    let okc = filter (cidMatch cid) channels
-    case okc of
-         [] -> return Nothing
-         _ -> do
-             let okname = valFromObj "name" (head okc) :: Result JSValue
-             let jsname = (\(Ok x) -> x) okname
-                 aokname = readJSON jsname :: Result JSString
-                 name = decodeString $ fromJSString $ (\(Ok x) -> x) aokname
-             return $ Just name 
-    
-cidMatch cid channel = do
-    let ok_cid = valFromObj "channel_id" channel :: Result JSValue
-        channel_id = (\(Ok x ) -> x) ok_cid
-        okc = readJSON channel_id :: Result Int
-        c = (\(Ok x) -> x) okc
-    show c == cid
-
-searchChannelName cid = do
+channelInfo "0" = do
+    let ch = Channel { intro = "私人", name = "私人", 
+                   song_num = 1001, banner = "",
+                   cover = "", id = 0, hot_songs = [] }
+    return ch
+channelInfo cid = do
     let rdata = [
                  ("channel", cid)
                 ]
-    let url = "http://douban.fm/j/explore/search?query=" ++ urlEncodeVars rdata 
+    let url = "http://douban.fm/j/explore/search?query=" ++ cid
     rsp <- simpleHTTP $ getRequest url
     json <- getResponseBody rsp
     let chs = parseChannel json
-    return $ name $ head chs
+        tc = filter (\c -> Douban.Search.id c == read cid) chs
+    return $ head tc
 
 login _ = do  
     putStr "Username: "
@@ -219,7 +194,7 @@ mark ("current":xs) = do
     ch_name <- getsST st_ch_name
     markCore ch_id ch_name
 mark (ch_id:xs) = do
-    ch_name <- channelName ch_id
+    ch_name <- fmap name (channelInfo ch_id)
     markCore ch_id ch_name
     shutdown
 mark _ = do
@@ -241,14 +216,13 @@ markCore ch_id ch_name = do
                         let newjson = encodeJSON $ ch:fav_ch
                         writeFile bookmarks newjson
                         putStrLn "Marked"
-    --silentlyModifyST $ \st -> st { st_ch_marked = True }
 
 unmark ("current":xs) = do
     ch_id <- getsST st_ch_id
     ch_name <- getsST st_ch_name
     unmarkCore ch_id ch_name
 unmark (ch_id:xs) = do
-    ch_name <- channelName ch_id
+    ch_name <- fmap name (channelInfo ch_id)
     unmarkCore ch_id ch_name
     shutdown
 unmark _ = do
@@ -270,7 +244,6 @@ unmarkCore ch_id ch_name = do
                         let newjson = encodeJSON $ delete ch fav_ch
                         writeFile bookmarks newjson
                         putStrLn "Unmarked"
-    --silentlyModifyST $ \st -> st { st_ch_marked = False }
 
 marks _ = do
     pprMarks
@@ -293,7 +266,6 @@ pprMarks = do
                 setSGR [Reset]
                 putStrLn ""     -- [Reset] won't work without this
                 )
-    --putStrLn json
     
 isMarked ch = do
     json <- readFile bookmarks
