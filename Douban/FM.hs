@@ -12,6 +12,7 @@ import Text.JSON.Generic
 import System.Cmd
 import System.Exit
 import System.IO
+import System.Directory
 import GHC.IO.Exception
 import Codec.Binary.UTF8.String (encodeString, decodeString)
 import Control.Monad.IO.Class (liftIO)
@@ -227,7 +228,15 @@ withEcho echo action = do
   old <- hGetEcho stdin
   bracket_ (hSetEcho stdin echo) (hSetEcho stdin old) action
 
-bookmarks = "bookmarks.json"
+getBookmarkFile = do
+    dir <- getAppUserDataDirectory "dourex"
+    let filepath = dir ++ "/bookmarks.json"
+    exist <- doesFileExist filepath
+    if exist then return filepath
+             else do
+                 createDirectory dir
+                 writeFile filepath ""
+                 return filepath
 
 mark ("current":xs) = do
     ch_id <- getsST st_ch_id
@@ -243,6 +252,7 @@ mark _ = do
 
 markCore ch_id ch_name = do
     let ch = FavChannel { fav_id = ch_id, fav_name = ch_name }
+    bookmarks <- getBookmarkFile
     json <- readFile bookmarks
     case json of
          "" -> do
@@ -271,6 +281,7 @@ unmark _ = do
 
 unmarkCore ch_id ch_name = do
     let ch = FavChannel { fav_id = ch_id, fav_name = ch_name }
+    bookmarks <- getBookmarkFile
     json <- readFile bookmarks
     case json of
          "" -> do
@@ -290,6 +301,7 @@ marks _ = do
     shutdown
 
 pprMarks = do
+    bookmarks <- getBookmarkFile
     json <- readFile bookmarks
     case json of
          "" -> do
@@ -308,6 +320,7 @@ pprMarks = do
                 )
     
 isMarked ch = do
+    bookmarks <- getBookmarkFile
     json <- readFile bookmarks
     case json of
          [] -> return False

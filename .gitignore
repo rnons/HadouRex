@@ -3,3 +3,4 @@
 *.o
 *.hi
 dourex
+dist/

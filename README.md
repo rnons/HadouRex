@@ -4,14 +4,21 @@ HadouRex is a douban.fm cli client written in haskell. I'm rather new to haskell
 
 ## How-To
 
+### To run
 <pre>
 runhaskell dourex.hs
 </pre>
 
-You may want to compile it.
+### To build
 
 <pre>
 ghc --make dourex.hs -threaded
+</pre>
+
+### To install
+
+<pre>
+cabal install
 </pre>
 
 ## Commands
