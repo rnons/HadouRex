@@ -27,7 +27,11 @@ dourex unmark cid
 dourex marks
 </pre>
 
-In `dourex listen arg`, if arg is all integer, dourex will assume it to be *channel id*. Otherwise, it will be assumed as *artist name*.
+In `dourex listen arg`, if arg is all integer, dourex will assume it to be *channel id*. Otherwise, it will be assumed as *artist name*.  
+
+Note: You need to quote the *artist name* when it consists of more than one word. e.g.
+
+`dourex listen "sigur ros"`
 
 When playing, press `h` to see a full list of available controls.
 
@@ -35,7 +39,8 @@ When playing, press `h` to see a full list of available controls.
 
 [hackage: HTTP](http://hackage.haskell.org/package/HTTP-4000.2.6)  
 [hackage: json](http://hackage.haskell.org/package/json-0.7)  
-[hackage: ansi-terminal](http://hackage.haskell.org/packages/archive/ansi-terminal)
+[hackage: ansi-terminal](http://hackage.haskell.org/package/ansi-terminal)  
+[hackage: tagsoup](http://hackage.haskell.org/package/tagsoup)  
 [mpg123](http://www.mpg123.de/)  
 
 ## Documentation

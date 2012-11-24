@@ -75,7 +75,6 @@ pause = do
                 putStrLn "Playing"
 
 markCurrent = do
-    --ch_marked <- getsST st_ch_marked
     -- bookmarks can be changed outside, while st_ch_marked not modified
     ch_id <- getsST st_ch_id
     ch_name <- getsST st_ch_name
@@ -91,7 +90,7 @@ recommendChannel = do
     desc    <- getsST st_ch_intro
     let href = "http://douban.fm/?cid=" ++ ch_id
     let action_props = RecChannel {channel_url = href,
-                         channel_title = encodeString ch_name ++ "MHz - dourex"
+                         channel_title = encodeString ch_name ++ "MHz - hadourex"
                          }
     let fdata = [("name", encodeString ch_name ++ "MHz"),
                  ("href", href),
@@ -116,7 +115,7 @@ recommendSong = do
     let start = st_s_sid ++ "g" ++ st_s_ssid ++ "g0"
     let sdata = [("start", start),("cid", ch_id)]
     let href = "http://douban.fm/?" ++ urlEncodeVars sdata
-        desc = encodeString $ "(来自dourex - " ++ ch_name ++ " MHz)"
+        desc = encodeString $ "(来自hadourex - " ++ ch_name ++ " MHz)"
     let fdata = [("name", encodeString name),
                  ("href", href),
                  ("image", image),

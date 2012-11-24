@@ -142,21 +142,22 @@ listenCid ch_id = do
     return ()
 
 listenArtist name = do
-    let url = "http://music.douban.com/tag/" ++ encodeString name
+    let url = "http://music.douban.com/search/" ++ urlEncode (encodeString name)
     rsp <- simpleHTTP $ getRequest url
     body <- getResponseBody rsp
     let tags = parseTags body
-        sec = sections (~== "<td id=musician_info>") tags
+        -- how to use `sections` when there are two class names?
+        sec = sections (~== "<div class=answer_left>") tags
     case sec of
          [] -> do
              putStrLn $ "Sorry, douban.fm knows no musician named " ++ name
              selectChannel
          _  -> do
-             let tag_url = (head $ sec) !! 2
-                 tag_name = (head $ sec) !! 3
-                 musician = (\(TagOpen s x) -> x) tag_url
-                 musician_name = decodeString $ (\(TagText x) -> x) tag_name
-                 (_, href) = head musician
+             let musician_tags = (head sec) !! 4
+                 musician_info = (\(TagOpen "a" x) -> x) musician_tags
+                 (_, resp_name) =  musician_info !! 2
+                 musician_name = decodeString resp_name
+                 (_, href) = musician_info !! 1
                  musician_id = filter isDigit href
              putStr "您正在收听的是: " 
              putStrLn $ musician_name ++ " MHz"
