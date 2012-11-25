@@ -40,6 +40,7 @@ handleKey ' ' = pause
 handleKey 'p' = pause
 handleKey 'n' = send "STOP"
 handleKey 'm' = markCurrent
+handleKey 'o' = openAlbumPage
 handleKey 'r' = recommendChannel
 handleKey 's' = recommendSong
 handleKey 'q' = do
@@ -52,6 +53,7 @@ handleKey 'h' = do
             "[n]    next track",
             "[m]    mark/unmark current channel",
             "[r]    recommend current channel to douban",
+            "[o]    open album/musician page",
             "[s]    share current song to douban",
             "[h]    this help",
             "[q]    quit"
@@ -131,6 +133,17 @@ recommendSong = do
 recommendCore fdata = do
     let shuo = "http://shuo.douban.com/!service/share?" ++ urlEncodeVars fdata
     forkIO $ do
-        createProcess (proc "xdg-open" [shuo]){ std_in = CreatePipe, std_out=CreatePipe, std_err = CreatePipe }
+        createProcess (proc "xdg-open" [shuo]){ std_in = CreatePipe, std_out = CreatePipe, std_err = CreatePipe }
+        return ()
+    return ()
+    
+openAlbumPage = do
+    subject_id <- getsST st_s_album
+    --let url = "http://music.douban.com" ++ subject_id
+    let url = if head subject_id == 'h' then subject_id
+                                        else "http://music.douban.com" ++ subject_id
+    print url
+    forkIO $ do
+        createProcess (proc "xdg-open" [url]){ std_in = CreatePipe, std_out = CreatePipe, std_err = CreatePipe }
         return ()
     return ()
