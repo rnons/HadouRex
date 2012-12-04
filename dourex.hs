@@ -8,8 +8,6 @@ import Douban.Utils
 import System.IO
 
 main = do
-    --(command:argList) <- getArgs
-    --dispatch command argList
     forkIO mpgLoop
     mpgInput
     --forkIO mpgInput
@@ -33,8 +31,6 @@ dispatch "mark" = mark
 dispatch "unmark" = unmark
 dispatch "marks" = marks
 dispatch "login" = login
---dispatch "" = select
---dispatch ("listen":[]) = select
 dispatch "listen" = listen
 dispatch x = showHelp
 
