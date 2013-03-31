@@ -19,16 +19,15 @@ executable dourex
   main-is:             dourex.hs 
   -- other-modules:       
   build-depends:       
-        base >= 4.6, 
-        unix >= 2.6, 
+        base >= 4.5, 
+        unix >= 2.5, 
         HTTP >= 4000.2, 
         json >= 0.7, 
         utf8-string >= 0.3, 
         ansi-terminal >= 0.5, 
         network >= 2.3, 
         process >= 1.1, 
-        directory >= 1.2, 
+        directory >= 1.1, 
         transformers >= 0.3, 
-        data-default >= 0.5,
         doubanfm >= 2012.12.21
   ghc-options:         -threaded

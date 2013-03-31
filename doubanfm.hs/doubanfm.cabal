@@ -23,7 +23,7 @@ library
 
   -- Other library packages from which modules are imported.
   build-depends:       
-        base >= 4.6, 
+        base >= 4.5, 
         HTTP >= 4000.2, 
         utf8-string >= 0.3, 
         json >= 0.7,
