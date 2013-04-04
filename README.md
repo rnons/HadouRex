@@ -48,6 +48,7 @@ dourex播放时，可以按`h`键查看快捷键。
 4. 用[mpd]代替mpg123进行音乐播放
 5. 用`putMVar`和`getMVar`机制，代替`mpg123wait`函数，可以参考[jinkell]
 6. 增加歌词，可以考虑[geci.me]
+7. 用[optparse-applicative]进行选项(listen，hot等)的解析。
 
 这几个方面我或多或少知道怎么去实现，不过暂时没有时间去做。 
 
@@ -67,3 +68,4 @@ dourex播放时，可以按`h`键查看快捷键。
 [jinkell]: https://github.com/rnons/jinkell
 [geci.me]: https://github.com/solos/geci.me-api
 [exaile-doubanfm-plugin]: https://github.com/sunng87/exaile-doubanfm-plugin
+[optparse-applicative]: http://hackage.haskell.org/package/optparse-applicative
