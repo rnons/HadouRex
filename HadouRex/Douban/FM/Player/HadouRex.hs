@@ -60,27 +60,14 @@ select = do
     pprMarks
     selectChannel
 
-
 listenCid ch_id = do
-    c <- channelInfo ch_id
-    case c of
-         Nothing -> putStrLn "Wrong Channel ID!" >> select
-         Just ch -> do 
-            putStr "您正在收听的是: "
-            let ch_name = name ch 
-            putStrLn $ name ch ++ " MHz"
-            silentlyModifyST $ \st -> st {  st_ch_id = ch_id
-                                           ,st_ch_name = name ch
-                                           ,st_ch_intro = intro ch
-                                           ,st_ch_picture = banner ch }
-            let reqData = [("type", "n"),
-                         ("channel", ch_id),
-                         ("from", "HadouRex")
-                        ]
-            --forkIO $ getPlaylist "n"
-            forkIO $ play reqData []
-            return ()
-
+    let reqData = [("type", "n"),
+                 ("channel", ch_id),
+                 ("from", "HadouRex")
+                ]
+    silentlyModifyST $ \st -> st {  st_ch_id = ch_id }
+    forkIO $ play reqData []
+    return ()
 
 listenArtist name = do
     mID <- FM.musicianID name
